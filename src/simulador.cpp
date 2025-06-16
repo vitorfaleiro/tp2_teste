@@ -5,25 +5,26 @@
 #include <iostream>
 #include <iomanip>
 
-// ------------------ Função de cálculo de rota ------------------
-
-void calcularRota(Pacote& pacote, int grafo[MAX_ARMAZENS][MAX_ARMAZENS], int totalArmazens) {
+void calcularRota(Pacote& pacote, int** grafo, int totalArmazens) {
     int origem = std::stoi(pacote.getOrigem());
     int destino = std::stoi(pacote.getDestino());
 
-    int anterior[MAX_ARMAZENS];
-    bool visitado[MAX_ARMAZENS] = {false};
-    int fila[MAX_ARMAZENS];
+    int* anterior = new int[totalArmazens];
+    bool* visitado = new bool[totalArmazens];
+    int* fila = new int[totalArmazens];
+
+    for (int i = 0; i < totalArmazens; i++) {
+        anterior[i] = -1;
+        visitado[i] = false;
+    }
+
     int inicio = 0, fim = 0;
-
-    for (int i = 0; i < totalArmazens; ++i) anterior[i] = -1;
-
     fila[fim++] = origem;
     visitado[origem] = true;
 
     while (inicio < fim) {
         int atual = fila[inicio++];
-        for (int viz = 0; viz < totalArmazens; ++viz) {
+        for (int viz = 0; viz < totalArmazens; viz++) {
             if (grafo[atual][viz] && !visitado[viz]) {
                 anterior[viz] = atual;
                 visitado[viz] = true;
@@ -32,7 +33,8 @@ void calcularRota(Pacote& pacote, int grafo[MAX_ARMAZENS][MAX_ARMAZENS], int tot
         }
     }
 
-    int caminho[MAX_ARMAZENS];
+    // Reconstruir caminho
+    int* caminho = new int[totalArmazens];
     int tam = 0;
     int atual = destino;
 
@@ -40,87 +42,90 @@ void calcularRota(Pacote& pacote, int grafo[MAX_ARMAZENS][MAX_ARMAZENS], int tot
         caminho[tam++] = atual;
         atual = anterior[atual];
     }
-    if (atual == origem) caminho[tam++] = origem;
 
-    while (!pacote.rota.vazia()) pacote.rota.removerPrimeiro();
-
-    for (int i = tam - 1; i >= 0; --i) {
-        pacote.rota.inserir(formatarNomeArmazem(caminho[i]));
+    if (atual == origem) {
+        caminho[tam++] = origem;
+        for (int i = tam - 1; i >= 0; i--) {
+            pacote.rota.inserir(formatarNomeArmazem(caminho[i]));
+        }
+    } else {
+        std::cerr << "Erro: sem caminho de " << origem << " até " << destino << std::endl;
     }
+
+    delete[] anterior;
+    delete[] visitado;
+    delete[] fila;
+    delete[] caminho;
 }
 
-// ------------------ Função de leitura da entrada ------------------
 
 void carregarEntrada(const std::string& nomeArquivo,
-                     Config& config,
-                     Armazem armazens[],
-                     int& totalArmazens,
-                     Pacote pacotes[],
-                     int& totalPacotes,
-                     Escalonador& escalonador) {
-    std::ifstream arq(nomeArquivo);
-    if (!arq) {
-        std::cerr << "Erro ao abrir arquivo: " << nomeArquivo << std::endl;
-        return;
-    }
+    Config& config,
+    Escalonador& escalonador) {
+std::ifstream arq(nomeArquivo);
+if (!arq) {
+std::cerr << "Erro ao abrir arquivo: " << nomeArquivo << std::endl;
+return;
+}
+Armazem* armazens;
+Pacote* pacotes;
+int numPacotes;
+int totalArmazens;
+int totalPacotes = 0;
+arq >> config.tempoTransporte
+>> config.tempoManipulacao
+>> config.tempoSimulacao
+>> config.numTiposPacote
+>> config.numArmazens;
 
-    int numPacotes;
+totalArmazens = config.numArmazens;
+armazens = new Armazem[totalArmazens];
+for (int i = 0; i < config.numArmazens; ++i)
+for (int j = 0; j < config.numArmazens; ++j)
+arq >> config.grafo[i][j];
 
-    arq >> config.tempoTransporte
-        >> config.tempoManipulacao
-        >> config.tempoSimulacao
-        >> config.numTiposPacote
-        >> config.numArmazens;
+for (int i = 0; i < config.numArmazens; ++i)
+armazens[i] = Armazem(formatarNomeArmazem(i));
 
-    totalArmazens = config.numArmazens;
+for (int i = 0; i < config.numArmazens; ++i)
+for (int j = 0; j < config.numArmazens; ++j)
+if (config.grafo[i][j])
+armazens[i].adicionarSecao(formatarNomeArmazem(j));
 
-    for (int i = 0; i < config.numArmazens; ++i)
-        for (int j = 0; j < config.numArmazens; ++j)
-            arq >> config.grafo[i][j];
+arq >> numPacotes;
+arq.ignore();
+totalPacotes = numPacotes;
+pacotes = new Pacote[numPacotes];
+for (int i = 0; i < numPacotes; ++i) {
+std::string linha;
+std::getline(arq, linha);
+std::istringstream ss(linha);
 
-    for (int i = 0; i < config.numArmazens; ++i)
-        armazens[i] = Armazem(formatarNomeArmazem(i));
+double tempo;
+std::string dummy;
+int id, origem, destino;
 
-    for (int i = 0; i < config.numArmazens; ++i)
-        for (int j = 0; j < config.numArmazens; ++j)
-            if (config.grafo[i][j])
-                armazens[i].adicionarSecao(formatarNomeArmazem(j));
+ss >> tempo >> dummy >> id >> dummy >> origem >> dummy >> destino;
 
-    arq >> numPacotes;
-    arq.ignore();
-    totalPacotes = numPacotes;
+std::string origemNome = formatarNomeArmazem(origem);
+std::string destinoNome = formatarNomeArmazem(destino);
 
-    for (int i = 0; i < numPacotes; ++i) {
-        std::string linha;
-        std::getline(arq, linha);
-        std::istringstream ss(linha);
+pacotes[id] = Pacote(id, "Rem" + std::to_string(id),
+            "Dest" + std::to_string(id),
+            origemNome, destinoNome, "Normal");
 
-        double tempo;
-        std::string dummy;
-        int id, origem, destino;
+calcularRota(pacotes[id], config.grafo, config.numArmazens);
 
-        ss >> tempo >> dummy >> id >> dummy >> origem >> dummy >> destino;
-
-        std::string origemNome = formatarNomeArmazem(origem);
-        std::string destinoNome = formatarNomeArmazem(destino);
-
-        pacotes[id] = Pacote(id, "Rem" + std::to_string(id),
-                             "Dest" + std::to_string(id),
-                             origemNome, destinoNome, "Normal");
-
-        calcularRota(pacotes[id], config.grafo, config.numArmazens);
-
-        Evento e;
-        e.tempo = tempo;
-        e.tipo = 0;
-        e.pacoteId = id;
-        escalonador.agendarEvento(e);
-    }
-
-    arq.close();
+Evento e;
+e.tempo = tempo;
+e.tipo = 0;
+e.pacoteId = id;
+escalonador.agendarEvento(e);
 }
 
-// ------------------ Função de log de eventos ------------------
+arq.close();
+executarSimulacao(escalonador, pacotes, totalPacotes, armazens, totalArmazens, config.grafo, config);
+}
 
 void logEvento(int tempo, int pacoteId, const std::string& acao, const std::string& de, const std::string& para) {
     std::cout << std::setfill('0') << std::setw(7) << tempo
@@ -140,7 +145,6 @@ void logEvento(int tempo, int pacoteId, const std::string& acao, const std::stri
     std::cout << std::endl;
 }
 
-// ------------------ Função para buscar armazém por nome ------------------
 
 Armazem* encontrarArmazem(const std::string& nome, Armazem armazens[], int totalArmazens) {
     for (int i = 0; i < totalArmazens; ++i) {
@@ -151,15 +155,14 @@ Armazem* encontrarArmazem(const std::string& nome, Armazem armazens[], int total
     return nullptr;
 }
 
-// ------------------ Execução da Simulação ------------------
 
 void executarSimulacao(Escalonador& escalonador,
-                       Pacote pacotes[],
-                       int totalPacotes,
-                       Armazem armazens[],
-                       int totalArmazens,
-                       int grafo[MAX_ARMAZENS][MAX_ARMAZENS],
-                       const Config& config) {
+    Pacote* pacotes,
+    int totalPacotes,
+    Armazem* armazens,
+    int totalArmazens,
+    int** grafo,
+    const Config& config) {
     while (escalonador.temEventos()) {
         Evento e = escalonador.proximoEvento();
         escalonador.avancarTempo(e.tempo);

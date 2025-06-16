@@ -11,17 +11,9 @@ int main(int argc, char* argv[]) {
 
     Config config;
 
-    Armazem armazens[MAX_ARMAZENS];
-    int totalArmazens = 0;
-
-    Pacote pacotes[MAX_PACOTES];
-    int totalPacotes = 0;
-
     Escalonador escalonador;
 
-    carregarEntrada(nomeArquivo, config, armazens, totalArmazens, pacotes, totalPacotes, escalonador);
-
-    executarSimulacao(escalonador, pacotes, totalPacotes, armazens, totalArmazens, config.grafo, config);
+    carregarEntrada(nomeArquivo, config, escalonador);
 
     return 0;
 }
