@@ -1,4 +1,3 @@
-// src/main.cpp
 #include <iostream>
 #include "simulador.h" // Inclui o cabeçalho do simulador
 
@@ -14,14 +13,17 @@ int main(int argc, char* argv[]) {
     Config config;                  // Objeto para armazenar as configurações da simulação
     Escalonador escalonador;        // Objeto para gerenciar os eventos
     Pacote* pacotes = nullptr;      // Ponteiro para o array de pacotes (será alocado dinamicamente)
-    int totalPacotes = 0;           // Número total de pacotes
+    int totalPacotes = 0;           // Número total de pacotes (passado por referência para carregarEntrada)
     Armazem* armazens = nullptr;   // Ponteiro para o array de armazéns (será alocado dinamicamente)
-    int totalArmazens = 0;          // Número total de armazéns
+    int totalArmazens = 0;          // Número total de armazéns (passado por referência para carregarEntrada)
 
     // Carrega os dados de entrada do arquivo. Os arrays pacotes e armazens
     // serão alocados dentro de carregarEntrada e seus ponteiros e tamanhos
     // serão passados de volta via referência.
     carregarEntrada(nomeArquivo, config, escalonador, &pacotes, totalPacotes, &armazens, totalArmazens);
+
+    // Inicializa o contador total de pacotes na Config após o carregamento
+    config.totalPacotesIniciais = totalPacotes; // <= Nova linha aqui
 
     // Verifica se o carregamento dos dados foi bem-sucedido
     if (pacotes == nullptr || armazens == nullptr || totalPacotes == 0 || totalArmazens == 0) {
@@ -31,10 +33,9 @@ int main(int argc, char* argv[]) {
     }
 
     // Executa a simulação
-    executarSimulacao(escalonador, pacotes, totalPacotes, armazens, totalArmazens, config.grafo, config);
+    executarSimulacao(escalonador, pacotes, totalPacotes, armazens, totalArmazens, config.grafo, config); // Passa config por referência
 
     // Desaloca a memória alocada dinamicamente para pacotes e armazens
-    // O destrutor de Pacote e Armazem se encarregarão de seus membros dinâmicos.
     delete[] pacotes;
     delete[] armazens;
     // O destrutor de Config já lida com a desalocação de config.grafo.

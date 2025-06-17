@@ -3,7 +3,8 @@
 #define LISTA_LIGADA_CPP
 
 #include "lista_ligada.h" // Inclui o cabeçalho da própria classe
-#include "pilha.h"        // Agora inclui pilha.h para que PacoteNaPilha seja conhecida
+#include "pilha.h"        // Para PacoteNaPilha (necessário para instanciação explícita)
+#include "raw_pacote_data.h" // Necessário para que RawPacoteData seja conhecida para instanciação explícita
 
 // Construtor da ListaLigada
 template<typename T>
@@ -64,5 +65,6 @@ void ListaLigada<T>::limpar() {
 // Isso é necessário quando a definição de um template está em um arquivo .cpp separado
 template class ListaLigada<std::string>;
 template class ListaLigada<PacoteNaPilha>;
+template class ListaLigada<RawPacoteData>; // Agora RawPacoteData é visível
 
 #endif // LISTA_LIGADA_CPP

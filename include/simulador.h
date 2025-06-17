@@ -7,20 +7,23 @@
 #include "pacote.h"
 #include "escalonador.h"
 #include "transporte.h" // Para EventType
+#include "lista_ligada.h" // Para ListaLigada (para a assinatura das funções, mas a instanciação é no .cpp)
+#include "raw_pacote_data.h" // NOVO: Inclui a definição de RawPacoteData
 
 // Estrutura para armazenar as configurações da simulação
 struct Config {
-    int tempoTransporte;    // Tempo de transporte entre dois armazéns
-    int tempoManipulacao;   // Tempo de manipulação de pacote em uma seção
-    int tempoSimulacao;     // Tempo total de simulação (pode ser um limite para o relógio)
-    int numTiposPacote;     // Não utilizado diretamente, mas lido do input
-    int numArmazens;        // Número total de armazéns na rede
-    int** grafo;            // Matriz de adjacência para representar as conexões entre armazéns
+    int tempoTransporte;
+    int tempoManipulacao;
+    int tempoSimulacao;
+    int numTiposPacote;
+    int numArmazens;
+    int** grafo;
 
-    // Construtor para inicializar grafo como nullptr
-    Config() : tempoTransporte(0), tempoManipulacao(0), tempoSimulacao(0), numTiposPacote(0), numArmazens(0), grafo(nullptr) {}
+    int totalPacotesIniciais;
+    int pacotesEntreguesCount;
 
-    // Destrutor para liberar a memória do grafo
+    Config() : tempoTransporte(0), tempoManipulacao(0), tempoSimulacao(0), numTiposPacote(0), numArmazens(0), grafo(nullptr), totalPacotesIniciais(0), pacotesEntreguesCount(0) {}
+
     ~Config() {
         if (grafo) {
             for (int i = 0; i < numArmazens; ++i) {
@@ -32,31 +35,34 @@ struct Config {
     }
 };
 
-// Calcula a rota de um pacote usando BFS
+// REMOVIDA DAQUI: struct RawPacoteData { ... };
+
+// (Restante das declarações de funções em simulador.h permanecem as mesmas)
 void calcularRota(Pacote& pacote, int** grafo, int totalArmazens);
 
-// Carrega os dados de entrada do arquivo
-void carregarEntrada(const std::string& nomeArquivo,
-                     Config& config,
-                     Escalonador& escalonador,
-                     Pacote** outPacotes, // Retorna os pacotes alocados
-                     int& totalPacotes,   // Retorna o total de pacotes
-                     Armazem** outArmazens, // Retorna os armazéns alocados
-                     int& totalArmazens); // Retorna o total de armazéns
+void carregarEntrada(const std::string& nomeArquivo, 
+                     Config& config, 
+                     Escalonador& escalonador, 
+                     Pacote** outPacotes, 
+                     int& totalPacotes, 
+                     Armazem** outArmazens, 
+                     int& totalArmazens);
+                     
+void executarSimulacao(Escalonador& escalonador, 
+                       Pacote* pacotes, 
+                       int totalPacotes, 
+                       Armazem* armazens, 
+                       int totalArmazens, 
+                       int** grafo, 
+                       Config& config);
 
-// Executa a simulação
-void executarSimulacao(Escalonador& escalonador,
-                       Pacote* pacotes,
-                       int totalPacotes,
-                       Armazem* armazens,
-                       int totalArmazens,
-                       int** grafo,
-                       const Config& config);
+void logEvento(int tempo, 
+               int pacoteId, 
+               const std::string& acao, 
+               const std::string& de, 
+               const std::string& para);
 
-// Função para logar eventos no formato especificado
-void logEvento(int tempo, int pacoteId, const std::string& acao, const std::string& de, const std::string& para);
-
-// Função auxiliar para encontrar um armazém pelo nome
+            
 Armazem* encontrarArmazem(const std::string& nome, Armazem armazens[], int totalArmazens);
 
 #endif // SIMULADOR_H
