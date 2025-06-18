@@ -4,14 +4,12 @@
 
 #include <string> // Para std::string dentro da struct
 
-// Estrutura temporária para armazenar dados brutos de pacotes durante a primeira passagem
 struct RawPacoteData {
     double tempo;
     int id;
     int origemId;
     int destinoId;
-    std::string linhaOriginal; // Opcional, para depuração
-    // Construtor padrão para garantir inicialização de string
+    std::string linhaOriginal;
     RawPacoteData() : tempo(0.0), id(-1), origemId(-1), destinoId(-1), linhaOriginal("") {}
 };
 

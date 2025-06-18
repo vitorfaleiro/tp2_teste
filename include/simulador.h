@@ -1,4 +1,3 @@
-// include/simulador.h
 #ifndef SIMULADOR_H
 #define SIMULADOR_H
 
@@ -6,11 +5,10 @@
 #include "armazem.h"
 #include "pacote.h"
 #include "escalonador.h"
-#include "transporte.h" // Para EventType
-#include "lista_ligada.h" // Para ListaLigada (para a assinatura das funções, mas a instanciação é no .cpp)
-#include "raw_pacote_data.h" // NOVO: Inclui a definição de RawPacoteData
+#include "transporte.h"
+#include "lista_ligada.h" // Para ListaLigada
+// #include "raw_pacote_data.h" // <--- Descomentar se você precisa deste struct
 
-// Estrutura para armazenar as configurações da simulação
 struct Config {
     int tempoTransporte;
     int tempoManipulacao;
@@ -35,34 +33,13 @@ struct Config {
     }
 };
 
-// REMOVIDA DAQUI: struct RawPacoteData { ... };
-
-// (Restante das declarações de funções em simulador.h permanecem as mesmas)
 void calcularRota(Pacote& pacote, int** grafo, int totalArmazens);
+void carregarEntrada(const std::string& nomeArquivo, Config& config, Escalonador& escalonador, Pacote** outPacotes, int& totalPacotes, Armazem** outArmazens, int& totalArmazens);
+void executarSimulacao(Escalonador& escalonador, Pacote* pacotes, int totalPacotes, Armazem* armazens, int totalArmazens, int** grafo, Config& config);
+void logEvento(int tempo, int pacoteId, const std::string& acao, const std::string& de, const std::string& para);
 
-void carregarEntrada(const std::string& nomeArquivo, 
-                     Config& config, 
-                     Escalonador& escalonador, 
-                     Pacote** outPacotes, 
-                     int& totalPacotes, 
-                     Armazem** outArmazens, 
-                     int& totalArmazens);
-                     
-void executarSimulacao(Escalonador& escalonador, 
-                       Pacote* pacotes, 
-                       int totalPacotes, 
-                       Armazem* armazens, 
-                       int totalArmazens, 
-                       int** grafo, 
-                       Config& config);
+// MUDANÇA IMPORTANTE: Assinatura para Armazem* armazens
+Armazem* encontrarArmazem(const std::string& nome, Armazem* armazens, int totalArmazens);
 
-void logEvento(int tempo, 
-               int pacoteId, 
-               const std::string& acao, 
-               const std::string& de, 
-               const std::string& para);
-
-            
-Armazem* encontrarArmazem(const std::string& nome, Armazem armazens[], int totalArmazens);
 
 #endif // SIMULADOR_H
